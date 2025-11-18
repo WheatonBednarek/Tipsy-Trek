@@ -25,13 +25,19 @@ import com.cs407.tipsytrek.data.DrinkManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.Person
+import com.cs407.tipsytrek.User
+import com.cs407.tipsytrek.ui.UserPageId
+
 
 // lowk cursed kotlin allows these to have the same identifier
 val HomePageId = "Home"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomePage(navController: NavController, onCollectDrink: (Beverage) -> Unit) {
+fun HomePage(navController: NavController,
+             user: User,
+             onCollectDrink: (Beverage) -> Unit) {
     val drinkManager by remember { mutableStateOf(DrinkManager()) }
     val drinks by drinkManager.drinksFlow.collectAsState()
     // launch a thread to tick the drink manager every second to have it check for changes
@@ -50,8 +56,16 @@ fun HomePage(navController: NavController, onCollectDrink: (Beverage) -> Unit) {
         modifier = Modifier.fillMaxSize(),
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("BAC: 0.??%") },
+                title = { Text("BAC: ${user.formattedBac}") },
                 actions = {
+                    // Button to go to User page
+                    IconButton(onClick = { navController.navigate(UserPageId) }) {
+                        Icon(
+                            Icons.Default.Person,
+                            contentDescription = "User Page"
+                        )
+                    }
+                    // Existing button to go to beverage selection
                     IconButton(onClick = { navController.navigate(SelectionScreenId) }) {
                         Icon(
                             Icons.Default.Menu,
@@ -69,4 +83,5 @@ fun HomePage(navController: NavController, onCollectDrink: (Beverage) -> Unit) {
             }
         }
     }
+
 }

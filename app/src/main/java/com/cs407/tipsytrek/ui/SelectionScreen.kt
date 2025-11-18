@@ -32,17 +32,19 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.cs407.tipsytrek.Beverage
 import com.cs407.tipsytrek.data.DrinkManager
+import com.cs407.tipsytrek.User
+
 
 val SelectionScreenId = "selection"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SelectionScreen(navController: NavController, bevs: List<Beverage>) {
+fun SelectionScreen(navController: NavController, bevs: List<Beverage>, user: User) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("BAC: 0.??%") },
+                title = { Text("BAC: ${user.formattedBac}") },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigate(HomePageId) }) {
                         Icon(
@@ -90,5 +92,5 @@ fun SelectionRow(beverage: Beverage, navController: NavController) {
 @Preview
 @Composable
 fun SelectionPreview() {
-    SelectionScreen(rememberNavController(), DrinkManager.possibleBevs)
+    SelectionScreen(rememberNavController(), DrinkManager.possibleBevs, user = User())
 }
