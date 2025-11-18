@@ -3,6 +3,7 @@ package com.cs407.tipsytrek.data
 import com.cs407.tipsytrek.Beverage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlin.math.pow
 import kotlin.random.Random
 
 data class LocatedDrink(val beverage: Beverage, val lat: Double, val long: Double, val expiryTime: Long)
@@ -12,6 +13,7 @@ class DrinkManager {
         // each longitude has 60 minutes and each minute has 60 seconds;
         // we want 30 seconds (≈ regent to spooner street distance)
         const val defaultRadius: Double = (1.0 / 60.0 / 60.0) * 30
+        const val collectRadius: Double = (1.0 / 60.0 / 60.0) * 5
         const val numDrinksAdd = 3
         const val newDrinkIntervalSeconds = 60
         const val drinkExpiryTimeSeconds = 60 * 5
@@ -65,6 +67,11 @@ class DrinkManager {
 
     private var prevAdd: Long = 0
 
+    /**
+     * ticks the manager to
+     * 1) delete expired drinks
+     * 2) add new drinks when necessary
+     */
     fun tick(lat: Double, long: Double, radius: Double = defaultRadius) {
         val now = System.currentTimeMillis()
 
@@ -90,6 +97,17 @@ class DrinkManager {
         }
 
         _drinksFlow.value = savedDrinks.toList()
+    }
+
+    /**
+     * collects any near enough drinks and returns their beverages
+     */
+    fun collectNearbyDrinks(lat: Double, long: Double) : List<Beverage> {
+        val nearbyDrinks = savedDrinks.filter { drink ->
+            (drink.lat - lat).pow(2) + (drink.long - long).pow(2) < collectRadius.pow(2)
+        }
+        nearbyDrinks.forEach { savedDrinks.remove(it) }
+        return nearbyDrinks.map { it.beverage }
     }
 
     private fun newBeverage(lat: Double, long: Double): LocatedDrink {

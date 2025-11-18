@@ -4,17 +4,17 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.cs407.tipsytrek.data.DrinkManager
 import com.cs407.tipsytrek.ui.DrinkPage
 import com.cs407.tipsytrek.ui.HomePage
 import com.cs407.tipsytrek.ui.HomePageId
@@ -28,10 +28,17 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val navController = rememberNavController()
+            var beverageCollection by remember { mutableStateOf(listOf<Beverage>()) }
+            // debug code to list out each beverage
+            LaunchedEffect(rememberCoroutineScope()) {
+                beverageCollection += DrinkManager.possibleBevs
+            }
             TipsyTrekTheme {
                 NavHost(navController, startDestination = HomePageId) {
-                    composable(HomePageId) { HomePage(navController) }
-                    composable(SelectionScreenId) { SelectionScreen(navController) }
+                    composable(HomePageId) { HomePage(navController, {
+                        beverageCollection += it
+                    }) }
+                    composable(SelectionScreenId) { SelectionScreen(navController, beverageCollection) }
                     composable<Beverage> { backStack ->
                         DrinkPage(backStack.toRoute(), navController)
                     }

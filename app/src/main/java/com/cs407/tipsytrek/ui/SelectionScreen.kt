@@ -37,7 +37,7 @@ val SelectionScreenId = "selection"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SelectionScreen(navController: NavController) {
+fun SelectionScreen(navController: NavController, bevs: List<Beverage>) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -54,7 +54,6 @@ fun SelectionScreen(navController: NavController) {
             )
         }
     ) { innerPadding ->
-        val bevs = DrinkManager.possibleBevs
         Column(Modifier
             .padding(innerPadding)
             .verticalScroll(rememberScrollState())
@@ -91,5 +90,5 @@ fun SelectionRow(beverage: Beverage, navController: NavController) {
 @Preview
 @Composable
 fun SelectionPreview() {
-    SelectionScreen(rememberNavController())
+    SelectionScreen(rememberNavController(), DrinkManager.possibleBevs)
 }
