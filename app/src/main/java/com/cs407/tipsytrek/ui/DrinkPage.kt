@@ -3,21 +3,16 @@ package com.cs407.tipsytrek.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
 import com.cs407.tipsytrek.Beverage
-import kotlinx.serialization.Serializable
+import com.google.fpl.liquidfun.*
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,8 +26,12 @@ fun DrinkPage(beverage: Beverage, navController: NavController) {
             )
         }
     ) { innerPadding ->
-        Canvas(Modifier.fillMaxSize().padding(innerPadding)) {
+        Canvas(Modifier
+            .fillMaxSize()
+            .padding(innerPadding)) {
             drawRect(Color(beverage.color))
+            val gravity: Vec2 = Vec2(0.0f, -9.8f)
+            //val world: World = World(gravity)
         }
     }
 }
