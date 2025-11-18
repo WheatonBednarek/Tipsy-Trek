@@ -1,5 +1,6 @@
 package com.cs407.tipsytrek.ui
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -10,11 +11,19 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
-import kotlinx.serialization.Serializable
+import com.cs407.tipsytrek.data.DrinkManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 // lowk cursed kotlin allows these to have the same identifier
 val HomePageId = "Home"
@@ -22,6 +31,18 @@ val HomePageId = "Home"
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomePage(navController: NavController) {
+    val drinkManager by remember { mutableStateOf(DrinkManager()) }
+    val drinks by drinkManager.drinksFlow.collectAsState()
+    // launch a thread to tick the drink manager every second to have it check for changes
+    val coroutineScope = rememberCoroutineScope()
+    LaunchedEffect(coroutineScope) {
+        coroutineScope.launch(Dispatchers.Main) {
+            while(true) {
+                drinkManager.tick(0.0, 0.0, 100.0)
+                delay(1000)
+            }
+        }
+    }
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -39,5 +60,10 @@ fun HomePage(navController: NavController) {
         }
     ) { innerPadding ->
         Text("TODO MAP", Modifier.padding(innerPadding))
+        Column {
+            for (drink in drinks) {
+                Text(drink.toString())
+            }
+        }
     }
 }
