@@ -7,7 +7,7 @@ import kotlin.math.pow
 import kotlin.random.Random
 
 data class LocatedDrink(val beverage: Beverage, val lat: Double, val long: Double, val expiryTime: Long)
-class DrinkManager {
+class DrinkLocationManager {
 
     companion object {
         // each longitude has 60 minutes and each minute has 60 seconds;

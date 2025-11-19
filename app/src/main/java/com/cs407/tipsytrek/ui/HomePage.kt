@@ -21,7 +21,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.cs407.tipsytrek.Beverage
-import com.cs407.tipsytrek.data.DrinkManager
+import com.cs407.tipsytrek.data.DrinkLocationManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -32,15 +32,15 @@ val HomePageId = "Home"
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomePage(navController: NavController, onCollectDrink: (Beverage) -> Unit) {
-    val drinkManager by remember { mutableStateOf(DrinkManager()) }
-    val drinks by drinkManager.drinksFlow.collectAsState()
+    val drinkLocationManager by remember { mutableStateOf(DrinkLocationManager()) }
+    val drinks by drinkLocationManager.drinksFlow.collectAsState()
     // launch a thread to tick the drink manager every second to have it check for changes
     val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(coroutineScope) {
         coroutineScope.launch(Dispatchers.Main) {
             while(true) {
-                drinkManager.tick(0.0, 0.0)
-                val collectedDrinks = drinkManager.collectNearbyDrinks(0.0, 0.0)
+                drinkLocationManager.tick(0.0, 0.0)
+                val collectedDrinks = drinkLocationManager.collectNearbyDrinks(0.0, 0.0)
                 collectedDrinks.forEach(onCollectDrink)
                 delay(1000)
             }

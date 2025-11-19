@@ -14,7 +14,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.cs407.tipsytrek.data.DrinkManager
+import com.cs407.tipsytrek.data.DrinkLocationManager
 import com.cs407.tipsytrek.ui.DrinkPage
 import com.cs407.tipsytrek.ui.HomePage
 import com.cs407.tipsytrek.ui.HomePageId
@@ -31,7 +31,7 @@ class MainActivity : ComponentActivity() {
             var beverageCollection by remember { mutableStateOf(listOf<Beverage>()) }
             // debug code to list out each beverage
             LaunchedEffect(rememberCoroutineScope()) {
-                beverageCollection += DrinkManager.possibleBevs
+                beverageCollection += DrinkLocationManager.possibleBevs
             }
             TipsyTrekTheme {
                 NavHost(navController, startDestination = HomePageId) {
