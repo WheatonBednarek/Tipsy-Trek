@@ -21,13 +21,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.cs407.tipsytrek.Beverage
-import com.cs407.tipsytrek.data.DrinkManager
+import com.cs407.tipsytrek.data.DrinkLocationManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.filled.Person
 import com.cs407.tipsytrek.User
-import com.cs407.tipsytrek.ui.UserPageId
 
 
 // lowk cursed kotlin allows these to have the same identifier
@@ -38,15 +37,15 @@ val HomePageId = "Home"
 fun HomePage(navController: NavController,
              user: User,
              onCollectDrink: (Beverage) -> Unit) {
-    val drinkManager by remember { mutableStateOf(DrinkManager()) }
-    val drinks by drinkManager.drinksFlow.collectAsState()
+    val drinkLocationManager by remember { mutableStateOf(DrinkLocationManager()) }
+    val drinks by drinkLocationManager.drinksFlow.collectAsState()
     // launch a thread to tick the drink manager every second to have it check for changes
     val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(coroutineScope) {
         coroutineScope.launch(Dispatchers.Main) {
             while(true) {
-                drinkManager.tick(0.0, 0.0)
-                val collectedDrinks = drinkManager.collectNearbyDrinks(0.0, 0.0)
+                drinkLocationManager.tick(0.0, 0.0)
+                val collectedDrinks = drinkLocationManager.collectNearbyDrinks(0.0, 0.0)
                 collectedDrinks.forEach(onCollectDrink)
                 delay(1000)
             }

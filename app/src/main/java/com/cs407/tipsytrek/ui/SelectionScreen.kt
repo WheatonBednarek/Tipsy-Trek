@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.cs407.tipsytrek.Beverage
-import com.cs407.tipsytrek.data.DrinkManager
+import com.cs407.tipsytrek.data.DrinkLocationManager
 import com.cs407.tipsytrek.User
 
 
@@ -92,5 +92,5 @@ fun SelectionRow(beverage: Beverage, navController: NavController) {
 @Preview
 @Composable
 fun SelectionPreview() {
-    SelectionScreen(rememberNavController(), DrinkManager.possibleBevs, user = User())
+    SelectionScreen(rememberNavController(), DrinkLocationManager.possibleBevs, user = User())
 }

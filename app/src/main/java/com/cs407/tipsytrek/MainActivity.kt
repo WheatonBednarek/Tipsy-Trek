@@ -16,7 +16,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.cs407.tipsytrek.data.DrinkManager
+import com.cs407.tipsytrek.data.DrinkLocationManager
 import com.cs407.tipsytrek.ui.DrinkPage
 import com.cs407.tipsytrek.ui.HomePage
 import com.cs407.tipsytrek.ui.HomePageId
@@ -27,7 +27,6 @@ import com.cs407.tipsytrek.ui.UserPageId
 import com.cs407.tipsytrek.ui.theme.TipsyTrekTheme
 
 // 🔹 IMPORTANT: import Beverage
-import com.cs407.tipsytrek.Beverage
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,7 +45,7 @@ class MainActivity : ComponentActivity() {
 
             // keep your original debug init of beverages
             LaunchedEffect(rememberCoroutineScope()) {
-                beverageCollection += DrinkManager.possibleBevs
+                beverageCollection += DrinkLocationManager.possibleBevs
             }
 
             TipsyTrekTheme {
