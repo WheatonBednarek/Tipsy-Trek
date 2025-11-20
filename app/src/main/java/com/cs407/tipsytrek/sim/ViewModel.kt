@@ -28,6 +28,7 @@ import kotlin.math.min
 import android.view.WindowManager
 import android.view.WindowMetrics
 import android.graphics.Rect
+import android.graphics.RectF
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.lifecycle.viewmodel.compose.viewModel
 import java.nio.ByteBuffer
@@ -97,6 +98,63 @@ class PhysicsViewModel : ViewModel() {
         }
 
         startSimulation()
+    }
+
+    private fun deleteOffScreenParticles() {
+        world?.let { w ->
+            particleSystem?.let { ps ->
+                // Create kill zones around the visible area
+
+                // Left kill zone
+                deleteParticlesInZone(ps, -50f, 0f, 20f, 80f)
+
+                // Right kill zone
+                deleteParticlesInZone(ps, 50f, 0f, 20f, 80f)
+
+                // Bottom kill zone
+                deleteParticlesInZone(ps, 0f, -17f, 100f, 20f)
+
+                // Top kill zone (optional)
+                deleteParticlesInZone(ps, 0f, 40f, 100f, 20f)
+            }
+        }
+    }
+
+    private fun deleteParticlesInZone(
+        ps: ParticleSystem,
+        centerX: Float,
+        centerY: Float,
+        width: Float,
+        height: Float
+    ) {
+        // Create a box shape for the kill zone
+        val shape = PolygonShape().apply {
+            setAsBox(width / 2f, height / 2f)
+        }
+
+        // Create a transform for the position
+        val transform = Transform()
+
+        // Create a temporary static body at the kill zone position
+        val bodyDef = BodyDef().apply {
+            type = BodyType.staticBody
+            setPosition(centerX, centerY)
+        }
+
+        val tempBody = world?.createBody(bodyDef)
+
+        tempBody?.let { body ->
+            // Use the body's transform
+            ps.destroyParticlesInShape(shape, body.transform)
+
+            // Clean up temporary body
+            world?.destroyBody(body)
+        }
+
+        // Clean up
+        bodyDef.delete()
+        shape.delete()
+        transform.delete()
     }
 
     private fun setupWaterDropSimulation() {
@@ -574,6 +632,8 @@ class PhysicsViewModel : ViewModel() {
             // Step physics
             w.step(targetDt, 8, 3,
                 liquidfun.b2CalculateParticleIterations(10f, 0.15f, targetDt))
+            //Delete off-screen particles
+            deleteOffScreenParticles()
             // Extract particle data
             val particles = mutableListOf<ParticleData>()
             particleSystem?.let { ps ->
@@ -867,7 +927,9 @@ private fun DrawScope.drawGrid(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PhysicsSimulationScreen(
-    viewModel: PhysicsViewModel = viewModel()
+    viewModel: PhysicsViewModel = viewModel(),
+    color: Color = Color(0xFFFFB84D),
+    onDrink: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -896,13 +958,13 @@ fun PhysicsSimulationScreen(
 
         },
         bottomBar = {
-            SimulationControls(
+            /*SimulationControls(
                 state = state,
                 onSimulationTypeSelected = { type ->
                     viewModel.initSimulation(type)
                 },
                 onTogglePause = { viewModel.togglePause() }
-            )
+            )*/
         }
     ) { padding ->
         Box(
