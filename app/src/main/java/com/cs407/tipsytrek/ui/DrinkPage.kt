@@ -10,19 +10,32 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
 import com.cs407.tipsytrek.Beverage
+import com.cs407.tipsytrek.User
 import com.cs407.tipsytrek.sim.PhysicsSimulationScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DrinkPage(beverage: Beverage, navController: NavController) {
+fun DrinkPage(
+    beverage: Beverage,
+    navController: NavController,
+    user: User,
+    onDrinkConsumed: (Beverage) -> Unit
+) {
+    // Called once when this composable first appears
+    LaunchedEffect(Unit) {
+        onDrinkConsumed(beverage)
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("BAC: 0.??%") }
+                title = { Text("BAC: ${user.formattedBac}") }
             )
         }
     ) { innerPadding ->
@@ -35,3 +48,7 @@ fun DrinkPage(beverage: Beverage, navController: NavController) {
         }
     }
 }
+
+
+
+
