@@ -5,5 +5,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Beverage(
     val name: String,
-    val color: Long
+    val color: Long,
+    val standardDrinks: Double
 )
