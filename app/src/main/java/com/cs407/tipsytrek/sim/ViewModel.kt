@@ -115,7 +115,7 @@ class PhysicsViewModel : ViewModel() {
                 deleteParticlesInZone(ps, 0f, -17f, 100f, 20f)
 
                 // Top kill zone (optional)
-                deleteParticlesInZone(ps, 0f, 40f, 100f, 20f)
+                //deleteParticlesInZone(ps, 0f, 40f, 100f, 20f)
             }
         }
     }
@@ -255,8 +255,8 @@ class PhysicsViewModel : ViewModel() {
 
             createBoundaries(w)
 
-            createBeerGlass(world = w, x = 0f, y = 0f)
-            createColoredLiquid(w, 0f, 7f, 4f, 18f, Color(0xFFFFB84D))
+            createBeerGlass(world = w, x = 0f, y = 10f)
+            createColoredLiquid(w, 0f, 60f, 0.5f, 100f, Color(0xFFFFB84D))
 
         }
     }
@@ -799,7 +799,7 @@ fun PhysicsSimulationCanvas(
 ) {
     Canvas(
         modifier = modifier
-            .fillMaxSize()
+            .requiredSize(3000.dp)
             .background(Color(0x00000000))
             .pointerInput(Unit) {
                 detectTapGestures { offset ->
