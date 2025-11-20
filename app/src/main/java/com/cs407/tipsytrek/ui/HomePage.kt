@@ -149,11 +149,11 @@ fun HomePage(navController: NavController, user: User, mapViewModel: MapViewMode
                 )
             }
         }
-        Column {
+        /* Column {
             for (drink in drinks) {
                 Text(drink.toString())
             }
-        }
+        } */
     }
 
 }
