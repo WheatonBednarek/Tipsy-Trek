@@ -7,9 +7,11 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.LatLng
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.location.Priority
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 data class MapState(
     val markers: List<LatLng> = emptyList(),
@@ -48,28 +50,22 @@ class MapViewModel : ViewModel() {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
             try {
-                fusedLocationClient.lastLocation
-                    .addOnSuccessListener { location ->
-                        if (location == null) {
-                            _uiState.value = _uiState.value.copy(
-                                error = "Unable to get location.",
-                                isLoading = false
-                            )
-                        } else {
+                val location = fusedLocationClient.getCurrentLocation(
+                    Priority.PRIORITY_HIGH_ACCURACY,
+                    null
+                ).await()
+                        if (location != null) {
                             val latLng = LatLng(location.latitude, location.longitude)
                             _uiState.value = _uiState.value.copy(
                                 currentLocation = latLng,
                                 isLoading = false
                             )
+                        } else {
+                            _uiState.value = _uiState.value.copy(
+                                error = "Unable to get location.",
+                                isLoading = false
+                            )
                         }
-                    }
-                    .addOnFailureListener {
-                        _uiState.value = _uiState.value.copy(
-                            error = "Failed to get location.",
-                            isLoading = false
-                        )
-                    }
-
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     error = "Location error: ${e.message}",
