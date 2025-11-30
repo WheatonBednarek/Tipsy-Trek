@@ -246,9 +246,9 @@ class PhysicsViewModel : ViewModel() {
         world?.let { w ->
             val particleSystemDef = ParticleSystemDef().apply {
                 radius = 0.12f
-                density = 1.0f
-                dampingStrength = 0.2f
-                viscousStrength = 0.15f
+                density = 0.8f
+                dampingStrength = 1.0f
+                viscousStrength = 0.01f
             }
             particleSystem = w.createParticleSystem(particleSystemDef)
             particleSystemDef.delete()
@@ -256,7 +256,7 @@ class PhysicsViewModel : ViewModel() {
             createBoundaries(w)
 
             createBeerGlass(world = w, x = 0f, y = 10f)
-            createColoredLiquid(w, 0f, 60f, 0.5f, 100f, Color(0xFFFFB84D))
+            createColoredLiquid(w, 0f, 60f, 0.36f, 88f, Color(0xFFFFB84D))
 
         }
     }
@@ -832,7 +832,7 @@ fun PhysicsSimulationCanvas(
             val screenPos = worldToScreen(particle.x, particle.y)
             drawCircle(
                 color = particle.color,
-                radius = 0.15f * scale,
+                radius = 0.2f * scale,
                 center = screenPos,
                 alpha = 0.8f
             )
@@ -945,7 +945,7 @@ fun PhysicsSimulationScreen(
                             onClick = { viewModel.initSimulation(SimulationType.DRINK_TEMP) },
                             modifier = Modifier.fillMaxWidth(0.33f)
                             ) {
-                            Text("Drink", fontSize = 12.sp)
+                            Text("Pour", fontSize = 12.sp)
                         }
                     }
 
