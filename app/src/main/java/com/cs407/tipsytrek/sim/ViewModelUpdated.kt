@@ -1,5 +1,5 @@
 package com.cs407.tipsytrek.sim
-/*
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -34,6 +34,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -777,7 +778,7 @@ class PhysicsViewModel : ViewModel() {
 
                         if (otherY >= y) continue
 
-                        val dx = kotlin.math.abs(otherX - x)
+                        val dx = abs(otherX - x)
                         val dy = y - otherY
 
                         if (dx <= searchRadius && dy <= detectionRadius) {
@@ -1185,4 +1186,3 @@ fun SimulationStats(
         }
     }
 }
-*/
