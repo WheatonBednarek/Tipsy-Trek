@@ -47,8 +47,13 @@ import com.google.android.gms.location.LocationServices
 import android.Manifest
 import androidx.core.app.ActivityCompat
 import android.content.pm.PackageManager
+import androidx.compose.material3.ModalBottomSheetDefaults.properties
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.maps.android.compose.MapProperties
+
 // (Maps integrated in Home Screen and Bar locations added)
 
 // lowk cursed kotlin allows these to have the same identifier
@@ -58,9 +63,10 @@ val HomePageId = "Home"
 @Composable
 fun HomePage(navController: NavController, user: User, mapViewModel: MapViewModel = viewModel(), onCollectDrink: (Beverage) -> Unit) {
     val context = LocalContext.current
-    val uiState by mapViewModel.uiState.collectAsState()
-    var userLocation by remember { mutableStateOf<LatLng?>(null) }
+    val uiState by mapViewModel.uiState.collectAsStateWithLifecycle()
     var hasLocationPermission by remember { mutableStateOf(false) }
+    mapViewModel.initializeLocationClient(context)
+
 
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -86,9 +92,15 @@ fun HomePage(navController: NavController, user: User, mapViewModel: MapViewMode
 
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(
-            userLocation ?: LatLng(43.0731, -89.4012),
+            uiState.currentLocation ?: LatLng(43.0731, -89.4012),
             15f
         )
+    }
+
+    LaunchedEffect(uiState.currentLocation) {
+        uiState.currentLocation?.let { loc ->
+            cameraPositionState.position = CameraPosition.fromLatLngZoom(loc, 15f)
+        }
     }
 
     val drinkLocationManager by remember { mutableStateOf(DrinkLocationManager()) }
@@ -134,14 +146,11 @@ fun HomePage(navController: NavController, user: User, mapViewModel: MapViewMode
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            cameraPositionState = cameraPositionState
+            cameraPositionState = cameraPositionState,
+            properties = MapProperties(
+                    isMyLocationEnabled = true
+            )
         ) {
-            userLocation?.let { location ->
-                Marker(
-                    state = MarkerState(location),
-                    title = "My Location"
-                )
-            }
             MadisonBars.forEach { bar ->
                 Marker(
                     state = MarkerState(position = LatLng(bar.latitude, bar.longitude)),
@@ -149,11 +158,11 @@ fun HomePage(navController: NavController, user: User, mapViewModel: MapViewMode
                 )
             }
         }
-        Column {
+        /* Column {
             for (drink in drinks) {
                 Text(drink.toString())
             }
-        }
+        } */
     }
 
 }

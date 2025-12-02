@@ -26,7 +26,9 @@ android {
 
         manifestPlaceholders["MAPS_API_KEY"] = project.findProperty("MAPS_API_KEY") ?: ""
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
     }
+
 
     buildTypes {
         release {
@@ -47,6 +49,8 @@ android {
     buildFeatures {
         compose = true
     }
+
+
 }
 
 dependencies {
@@ -68,7 +72,12 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation(libs.androidx.navigation.compose)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
-
+    implementation ("org.jbox2d:jbox2d-testbed:2.2.1.1")
+    implementation ("org.jbox2d:jbox2d-library:2.2.1.1")
+    implementation ("org.slf4j:slf4j-api:1.6.1")
+    implementation ("org.slf4j:slf4j-log4j12:1.6.1")
+    implementation ("log4j:log4j:1.2.14")
+    implementation ("org.jbox2d:jbox2d-serialization:1.1.0")
     implementation("com.google.maps.android:maps-ktx:5.2.0")
     implementation("com.google.maps.android:maps-utils-ktx:5.2.0")
     implementation("com.google.maps.android:maps-compose:4.4.1")
@@ -81,3 +90,4 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
 }
+
