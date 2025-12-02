@@ -33,9 +33,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        System.loadLibrary("liquidfun")
-        System.loadLibrary("liquidfun_jni")
-
         setContent {
             val navController = rememberNavController()
 
