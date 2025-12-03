@@ -25,6 +25,12 @@ import com.cs407.tipsytrek.ui.SelectionScreenId
 import com.cs407.tipsytrek.ui.UserPage
 import com.cs407.tipsytrek.ui.UserPageId
 import com.cs407.tipsytrek.ui.theme.TipsyTrekTheme
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.cs407.tipsytrek.ui.LoginPage
+import com.cs407.tipsytrek.ui.LoginPageId
+import com.cs407.tipsytrek.Beverage
+
 
 // 🔹 IMPORTANT: import Beverage
 
@@ -39,11 +45,21 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
 
+            val auth = remember { FirebaseAuth.getInstance() }
+            var firebaseUser by remember { mutableStateOf(auth.currentUser) }
+
             // original list used for SelectionScreen
             var beverageCollection by remember { mutableStateOf(listOf<Beverage>()) }
 
             // new User state for BAC + counts
-            var user by remember { mutableStateOf(User()) }
+            var user by remember {
+                mutableStateOf(
+                    firebaseUser?.let { firebaseUserToUser(it) } ?: User()
+                )
+            }
+
+            var usersByUid by remember { mutableStateOf<Map<String, User>>(emptyMap()) }
+
 
             val context = LocalContext.current
 
@@ -52,8 +68,45 @@ class MainActivity : ComponentActivity() {
                 beverageCollection += DrinkLocationManager.possibleBevs
             }
 
+            val startDestination = LoginPageId
+
+            // Helper: whenever we change the current User, also save it in usersByUid
+            fun updateUser(newUser: User) {
+                user = newUser
+                val uid = firebaseUser?.uid
+                if (uid != null) {
+                    usersByUid = usersByUid.toMutableMap().apply {
+                        put(uid, newUser)
+                    }
+                }
+            }
+
+
             TipsyTrekTheme {
-                NavHost(navController, startDestination = HomePageId) {
+                NavHost(navController, startDestination = startDestination) {
+
+                    composable(LoginPageId) {
+                        LoginPage { signedInUser ->
+                            firebaseUser = signedInUser
+
+                            val uid = signedInUser.uid
+                            val existingUser = usersByUid[uid]
+
+                            // If we've seen this uid before in this app run, reuse their User
+                            val newUser = existingUser ?: firebaseUserToUser(signedInUser)
+                            user = newUser
+
+                            // Make sure map is updated
+                            usersByUid = usersByUid.toMutableMap().apply {
+                                put(uid, newUser)
+                            }
+
+                            navController.navigate(HomePageId) {
+                                popUpTo(LoginPageId) { inclusive = true }
+                            }
+                        }
+                    }
+
 
                     // HOME
                     composable(HomePageId) {
@@ -65,7 +118,8 @@ class MainActivity : ComponentActivity() {
                                 beverageCollection += beverage
 
                                 // new behavior: track in User as well
-                                user = user.addDrink(beverage)
+                                updateUser(user.addDrink(beverage))
+
 
                                 Toast.makeText(
                                     context,
@@ -87,10 +141,21 @@ class MainActivity : ComponentActivity() {
                             navController = navController,
                             user = user,
                             onResetCurrent = {
-                                user = user.resetCurrentDrinks()
+                                updateUser(user.resetCurrentDrinks())
+
+                            },
+                            onLogout = {
+                                auth.signOut()
+                                firebaseUser = null
+                                user = User()  // back to placeholder
+
+                                navController.navigate(LoginPageId) {
+                                    popUpTo(0) { inclusive = true }
+                                }
                             }
                         )
                     }
+
 
                     // DRINK DETAIL
                     composable<Beverage> { backStack ->
@@ -105,7 +170,7 @@ class MainActivity : ComponentActivity() {
                                 beverageCollection += drink
 
                                 // and user stats
-                                user = user.addDrink(drink)
+                                updateUser(user.addDrink(drink))
 
                                 Toast.makeText(
                                     context,
@@ -119,5 +184,19 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+    private fun firebaseUserToUser(firebaseUser: FirebaseUser): User {
+        val email = firebaseUser.email ?: "unknown@example.com"
+        val baseName = email.substringBefore("@")
+        val displayName = firebaseUser.displayName ?: baseName
+        val username = "@$baseName"
+
+        return User(
+            uid = firebaseUser.uid,
+            email = email,
+            displayName = displayName,
+            username = username
+        )
+    }
+
 }
 

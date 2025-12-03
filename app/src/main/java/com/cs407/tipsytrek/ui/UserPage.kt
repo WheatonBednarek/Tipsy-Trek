@@ -24,7 +24,8 @@ val UserPageId = "User"
 fun UserPage(
     navController: NavController,
     user: User,
-    onResetCurrent: () -> Unit
+    onResetCurrent: () -> Unit,
+    onLogout: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -42,7 +43,9 @@ fun UserPage(
         ) {
             Column {
                 Text("Display name: ${user.displayName}")
-                Text("Username: ${user.username}")
+                Text("Email: ${user.email ?: "Unknown"}")
+
+                // Text("Username: ${user.username}")
 
                 Spacer(Modifier.padding(top = 16.dp))
 
@@ -56,6 +59,15 @@ fun UserPage(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Reset drink count")
+                }
+
+                Spacer(Modifier.padding(top = 8.dp))
+
+                Button(
+                    onClick = onLogout,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Log out")
                 }
 
                 Spacer(Modifier.padding(top = 8.dp))
