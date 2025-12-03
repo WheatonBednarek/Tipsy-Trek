@@ -34,6 +34,12 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
+//TODO Beverage Input
+//TODO Fix foam simulation
+//TODO Tweak simulation to look more liquid-like
+//TODO Gravity to screen angle, once particles reach 0, drink has been consumed
+//TODO
+
 // Data classes for rendering
 data class ParticleData(
     val x: Float,
