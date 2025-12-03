@@ -32,6 +32,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        System.loadLibrary("liquidfun")
+        System.loadLibrary("liquidfun_jni")
+
         setContent {
             val navController = rememberNavController()
 
