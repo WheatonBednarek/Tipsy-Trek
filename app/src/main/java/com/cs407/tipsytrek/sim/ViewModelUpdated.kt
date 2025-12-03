@@ -19,7 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.fpl.liquidfun.*
+//Deprecated library
+//import com.google.fpl.liquidfun.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,6 +32,15 @@ import android.graphics.Rect
 import android.graphics.RectF
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.jbox2d.dynamics.World
+import org.jbox2d.dynamics.*
+import org.jbox2d.*
+import org.jbox2d.collision.shapes.EdgeShape
+import org.jbox2d.collision.*
+import org.jbox2d.collision.shapes.*
+import org.jbox2d.common.Transform
+import org.jbox2d.particle.*
+import org.jbox2d.particle.ParticleSystem
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.math.PI
