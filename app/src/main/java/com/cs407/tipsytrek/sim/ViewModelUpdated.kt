@@ -166,7 +166,7 @@ class PhysicsViewModel : ViewModel() {
             createBeerGlass(world = w, x = 0f, y = 10f)
 
             // Pour liquid from above
-            createColoredLiquid(w, 0f, 20f, 3f, 8f, Color(0xFFFFB84D))
+            createColoredLiquid(w, 0f, 15f, 3f, 12f, Color(0xFFFFB84D))
         }
     }
 
@@ -251,7 +251,7 @@ class PhysicsViewModel : ViewModel() {
     }
 
     private fun createColoredLiquid(w: World, x: Float, y: Float, width: Float, height: Float, color: Color) {
-        val particleRadius = 0.15f
+        val particleRadius = 0.10f
         val rows = (height / (particleRadius * 2f)).toInt()
         val cols = (width / (particleRadius * 2f)).toInt()
 
@@ -452,8 +452,8 @@ class PhysicsViewModel : ViewModel() {
     }
 
     private fun updateParticleSupportLevels() {
-        val detectionRadius = 0.4f
-        val searchRadius = 0.3f
+        //val detectionRadius = 0.4f
+        //val searchRadius = 0.3f
 
         particles.forEach { particle ->
             val pos = particle.body.position
@@ -462,14 +462,10 @@ class PhysicsViewModel : ViewModel() {
             particles.forEach { other ->
                 if (particle != other) {
                     val otherPos = other.body.position
-                    if (otherPos.y >= pos.y) return@forEach
+                    if (otherPos.y < pos.y+0.5) return@forEach
 
-                    val dx = abs(otherPos.x - pos.x)
                     val dy = pos.y - otherPos.y
-
-                    if (dx <= searchRadius && dy <= detectionRadius) {
-                        supportCount++
-                    }
+                    supportCount++
                 }
             }
 
