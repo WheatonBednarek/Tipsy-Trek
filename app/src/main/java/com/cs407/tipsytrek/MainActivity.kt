@@ -63,9 +63,9 @@ class MainActivity : ComponentActivity() {
 
             val context = LocalContext.current
 
-            // keep your original debug init of beverages
             LaunchedEffect(rememberCoroutineScope()) {
-                beverageCollection += DrinkLocationManager.possibleBevs
+                // for demo include one random drink
+                beverageCollection += DrinkLocationManager.possibleBevs.random()
             }
 
             val startDestination = LoginPageId
@@ -123,7 +123,7 @@ class MainActivity : ComponentActivity() {
 
                                 Toast.makeText(
                                     context,
-                                    "Drink consumed!",
+                                    beverage.name + " collected!",
                                     Toast.LENGTH_SHORT
                                 ).show()
                             }
@@ -172,7 +172,7 @@ class MainActivity : ComponentActivity() {
                             user = user,                         // 🔹 pass user in
                             onDrinkConsumed = { drink ->
                                 // increment main drink list
-                                beverageCollection += drink
+                                beverageCollection -= drink
 
                                 // and user stats
                                 updateUser(user.addDrink(drink))

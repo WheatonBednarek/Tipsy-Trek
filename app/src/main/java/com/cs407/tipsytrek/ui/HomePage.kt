@@ -57,13 +57,19 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
 import androidx.compose.material3.ModalBottomSheetDefaults.properties
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.maps.android.compose.MapProperties
 
 // (Maps integrated in Home Screen and Bar locations added)
@@ -134,8 +140,10 @@ fun HomePage(navController: NavController, user: User, mapViewModel: MapViewMode
     LaunchedEffect(coroutineScope) {
         coroutineScope.launch(Dispatchers.Main) {
             while(true) {
-                drinkLocationManager.tick(0.0, 0.0)
-                val collectedDrinks = drinkLocationManager.collectNearbyDrinks(0.0, 0.0)
+                val myLat = uiState.currentLocation?.latitude ?: 0.0
+                val myLong = uiState.currentLocation?.longitude ?: 0.0
+                drinkLocationManager.tick(myLat, myLong)
+                val collectedDrinks = drinkLocationManager.collectNearbyDrinks(myLat, myLong)
                 collectedDrinks.forEach(onCollectDrink)
                 delay(1000)
             }
@@ -194,8 +202,14 @@ fun HomePage(navController: NavController, user: User, mapViewModel: MapViewMode
 
                     nearbyBar = if (closestDist < 30) closest else null
                 }
+            drinks.forEach {
+                Marker(
+                    state = MarkerState(position = LatLng(it.lat, it.long)),
+                    icon = createColoredCircle(it.beverage.color.toInt(), 64.dp.value.toInt())
+                )
             }
         }
+            }
         Box(modifier = Modifier
             .fillMaxSize()
             .padding(innerPadding)
@@ -235,4 +249,18 @@ fun HomePage(navController: NavController, user: User, mapViewModel: MapViewMode
             }
         }
     }
+}
+
+fun createColoredCircle(color: Int, size: Int = 64): BitmapDescriptor {
+    val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+
+    val paint = Paint().apply {
+        this.color = color
+        isAntiAlias = true
+    }
+
+    canvas.drawCircle(size / 2f, size / 2f, size / 2f, paint)
+
+    return BitmapDescriptorFactory.fromBitmap(bitmap)
 }

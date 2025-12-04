@@ -89,8 +89,8 @@ class DrinkLocationManager {
             repeat(numDrinksAdd) {
                 savedDrinks.add(
                     newBeverage(
-                        lat + Random.nextDouble() * radius * 2,
-                        long + Random.nextDouble() * radius * 2
+                        lat + 2*(.5-Random.nextDouble()) * radius * 2,
+                        long + 2*(.5-Random.nextDouble()) * radius * 2
                     )
                 )
             }
