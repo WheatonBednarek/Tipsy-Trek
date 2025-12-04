@@ -1,5 +1,7 @@
 package com.cs407.tipsytrek.sim
 
+import android.hardware.Sensor
+import android.hardware.SensorEvent
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -35,7 +37,8 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 //TODO Beverage Input
-//TODO Gravity to screen angle, once particles reach 0, drink has been consumed
+//TODO Gravity to screen angle
+//TODO once particles reach 0, drink has been consumed
 //TODO Tweak simulation to request
 
 // Data classes for rendering
@@ -77,6 +80,7 @@ class PhysicsViewModel : ViewModel() {
     val state: StateFlow<SimulationState> = _state.asStateFlow()
 
     private var world: World? = null
+    private var lastTimestamp: Long = 0L
     private val particles = mutableListOf<CustomParticle>()
     private val bodies = mutableMapOf<String, Pair<Body, String>>() // Body to type mapping
     private var simulationJob: Job? = null
@@ -90,7 +94,8 @@ class PhysicsViewModel : ViewModel() {
         cleanup()
 
         world = World(Vec2(0f, -10f))
-
+        //world?.gravity = Vec2(0f, -10f)
+        //
         when (type) {
             SimulationType.WATER_DROP -> setupWaterDropSimulation()
             SimulationType.PARTICLE_FOUNTAIN -> setupParticleFountain()
@@ -468,6 +473,25 @@ class PhysicsViewModel : ViewModel() {
             }
 
             particle.supportLevel = if (supportCount <= 2) 0 else 1
+        }
+    }
+
+    fun onSensorDataChanged(event: SensorEvent) {
+        // Ensure ball is initialized
+        world?: return
+
+        if (event.sensor.type == Sensor.TYPE_GRAVITY) {
+            if (lastTimestamp != 0L) {
+                //val NS2S = 1.0f / 1000000000.0f
+                //val dT = (event.timestamp - lastTimestamp) * NS2S
+
+                //change math to better reflect?
+                //may be fine because gravity is acceleration based
+                world!!.gravity = Vec2(-event.values[0], event.values[1])
+
+            }
+
+            lastTimestamp = event.timestamp
         }
     }
 
