@@ -1,7 +1,12 @@
 package com.cs407.tipsytrek.sim
 
+import android.app.Activity
+import android.content.Context
+import android.content.pm.ActivityInfo
 import android.hardware.Sensor
 import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -15,6 +20,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
@@ -111,7 +117,7 @@ class PhysicsViewModel : ViewModel() {
         world?.let { w ->
             particles.removeAll { particle ->
                 val pos = particle.body.position
-                val shouldDelete = pos.x < -50f || pos.x > 50f || pos.y < -17f
+                val shouldDelete = pos.x < -25f || pos.x > 25f || pos.y < -25f || pos.y > 40f
                 if (shouldDelete) {
                     w.destroyBody(particle.body)
                 }
@@ -165,7 +171,7 @@ class PhysicsViewModel : ViewModel() {
 
     private fun setupDrink() {
         world?.let { w ->
-            createBoundaries(w)
+            //createBoundaries(w)
             createBeerGlass(world = w, x = 0f, y = 10f)
 
             // Pour liquid from above
@@ -460,19 +466,15 @@ class PhysicsViewModel : ViewModel() {
 
         particles.forEach { particle ->
             val pos = particle.body.position
-            var supportCount = 0
-
+            var totalBelow = 0;
             particles.forEach { other ->
                 if (particle != other) {
                     val otherPos = other.body.position
-                    if (otherPos.y < pos.y+0.5) return@forEach
-
-                    val dy = pos.y - otherPos.y
-                    supportCount++
+                    if (otherPos.y > pos.y+0.5) totalBelow++;
                 }
             }
 
-            particle.supportLevel = if (supportCount <= 2) 0 else 1
+            particle.supportLevel = if (totalBelow <= 20) 0 else 1
         }
     }
 
@@ -487,7 +489,7 @@ class PhysicsViewModel : ViewModel() {
 
                 //change math to better reflect?
                 //may be fine because gravity is acceleration based
-                world!!.gravity = Vec2(-event.values[0], event.values[1])
+                world!!.gravity = Vec2(-event.values[0], -event.values[1])
 
             }
 
@@ -672,6 +674,47 @@ fun PhysicsSimulationScreen(
     onDrink: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
+
+    val context = LocalContext.current
+    val sensorManager = remember {
+        context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+    }
+
+    val gravitySensor = remember {
+        sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+    }
+
+    DisposableEffect(sensorManager, gravitySensor) {
+        val listener = object : SensorEventListener {
+            override fun onSensorChanged(event: SensorEvent?) {
+                event?.let {
+                    viewModel.onSensorDataChanged(it)
+                }
+            }
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+                // Do nothing
+            }
+        }
+
+        // (Don't forget to add a null check for gravitySensor!)
+        if (gravitySensor != null) {
+            sensorManager.registerListener(
+                listener,
+                gravitySensor,
+                SensorManager.SENSOR_DELAY_GAME
+            )
+        }
+        val activity = context as? Activity
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
+        // onDispose is called when the composable leaves the screen
+        onDispose {
+            // (Don't forget to add a null check for gravitySensor!)
+            if (gravitySensor != null) {
+                sensorManager.unregisterListener(listener)
+            }
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
+    }
 
     Scaffold(
         topBar = {
