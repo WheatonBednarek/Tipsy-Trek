@@ -29,7 +29,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.cs407.tipsytrek.ui.LoginPage
 import com.cs407.tipsytrek.ui.LoginPageId
-import com.cs407.tipsytrek.Beverage
+import com.cs407.tipsytrek.ui.BarPage
 
 
 // 🔹 IMPORTANT: import Beverage
@@ -156,6 +156,11 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
+                    // BAR PAGE
+                    composable("bar/{barId}") { backStackEntry ->
+                        val barId = backStackEntry.arguments?.getString("barId")!!
+                        BarPage(navController, barId)
+                    }
 
                     // DRINK DETAIL
                     composable<Beverage> { backStack ->

@@ -54,18 +54,18 @@ class MapViewModel : ViewModel() {
                     Priority.PRIORITY_HIGH_ACCURACY,
                     null
                 ).await()
-                        if (location != null) {
-                            val latLng = LatLng(location.latitude, location.longitude)
-                            _uiState.value = _uiState.value.copy(
-                                currentLocation = latLng,
-                                isLoading = false
+                if (location != null) {
+                    val latLng = LatLng(location.latitude, location.longitude)
+                    _uiState.value = _uiState.value.copy(
+                        currentLocation = latLng,
+                        isLoading = false
                             )
-                        } else {
-                            _uiState.value = _uiState.value.copy(
-                                error = "Unable to get location.",
-                                isLoading = false
-                            )
-                        }
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        error = "Unable to get location.",
+                        isLoading = false
+                    )
+                }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     error = "Location error: ${e.message}",

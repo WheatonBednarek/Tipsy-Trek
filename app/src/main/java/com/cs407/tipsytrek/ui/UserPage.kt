@@ -11,22 +11,49 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.cs407.tipsytrek.User
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 val UserPageId = "User"
 
+fun getBarVisitCount(userId: String, onResult: (Int) -> Unit) {
+    FirebaseFirestore.getInstance()
+        .collection("users")
+        .document(userId)
+        .collection("barVisits")
+        .get()
+        .addOnSuccessListener { query ->
+            onResult(query.size())
+        }
+        .addOnFailureListener {
+            onResult(0)
+        }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserPage(
-    navController: NavController,
-    user: User,
-    onResetCurrent: () -> Unit,
-    onLogout: () -> Unit
+fun UserPage(navController: NavController,
+             user: User,
+             onResetCurrent: () -> Unit,
+             onLogout: () -> Unit
 ) {
+    val firebaseUser = FirebaseAuth.getInstance().currentUser
+    val userId = firebaseUser?.uid
+    var barCount by remember { mutableStateOf(0) }
+
+    LaunchedEffect(userId) {
+        userId?.let {
+            getBarVisitCount(it) { count ->
+                barCount = count
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -51,6 +78,10 @@ fun UserPage(
 
                 Text("Current drinks: ${user.currentDrinks.size}")
                 Text("All-time drinks: ${user.allTimeDrinks.size}")
+
+                Spacer(Modifier.padding(top = 16.dp))
+
+                Text("Bars visited: $barCount")
             }
 
             Column {

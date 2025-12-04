@@ -45,11 +45,23 @@ import com.cs407.tipsytrek.MadisonBars
 import com.cs407.tipsytrek.Bar
 import com.google.android.gms.location.LocationServices
 import android.Manifest
+import kotlin.math.*
 import androidx.core.app.ActivityCompat
 import android.content.pm.PackageManager
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheetDefaults.properties
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.maps.android.compose.MapProperties
@@ -59,12 +71,24 @@ import com.google.maps.android.compose.MapProperties
 // lowk cursed kotlin allows these to have the same identifier
 val HomePageId = "Home"
 
+fun distanceMeters(a: LatLng, b: LatLng): Double {
+    val R = 6371000.0
+    val dLat = Math.toRadians(b.latitude - a.latitude)
+    val dLng = Math.toRadians(b.longitude - a.longitude)
+    val lat1 = Math.toRadians(a.latitude)
+    val lat2 = Math.toRadians(b.latitude)
+
+    val h = sin(dLat / 2).pow(2) + sin(dLng / 2).pow(2) * cos(lat1) * cos(lat2)
+    return 2 * R * asin(sqrt(h))
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomePage(navController: NavController, user: User, mapViewModel: MapViewModel = viewModel(), onCollectDrink: (Beverage) -> Unit) {
     val context = LocalContext.current
     val uiState by mapViewModel.uiState.collectAsStateWithLifecycle()
     var hasLocationPermission by remember { mutableStateOf(false) }
+    var nearbyBar by remember { mutableStateOf<Bar?>(null) }
     mapViewModel.initializeLocationClient(context)
 
 
@@ -148,8 +172,8 @@ fun HomePage(navController: NavController, user: User, mapViewModel: MapViewMode
                 .padding(innerPadding),
             cameraPositionState = cameraPositionState,
             properties = MapProperties(
-                    isMyLocationEnabled = true
-            )
+                isMyLocationEnabled = true
+            ),
         ) {
             MadisonBars.forEach { bar ->
                 Marker(
@@ -157,12 +181,58 @@ fun HomePage(navController: NavController, user: User, mapViewModel: MapViewMode
                     title = bar.name
                 )
             }
-        }
-        /* Column {
-            for (drink in drinks) {
-                Text(drink.toString())
-            }
-        } */
-    }
 
+            uiState.currentLocation?.let { userLoc ->
+                MadisonBars.forEach { bar ->
+                    val closest = MadisonBars.minByOrNull { bar ->
+                        distanceMeters(userLoc, LatLng(bar.latitude, bar.longitude))
+                    }
+
+                    val closestDist = closest?.let {
+                        distanceMeters(userLoc, LatLng(it.latitude, it.longitude))
+                    } ?: Double.MAX_VALUE
+
+                    nearbyBar = if (closestDist < 30) closest else null
+                }
+            }
+        }
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)
+        ) {
+        nearbyBar?.let { bar ->
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            "You're near ${bar.name}!",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Button(
+                            onClick = { navController.navigate("bar/${bar.name}") },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Enter ${bar.name}")
+                        }
+                    }
+                }
+            }
+            }
+        }
+    }
 }
