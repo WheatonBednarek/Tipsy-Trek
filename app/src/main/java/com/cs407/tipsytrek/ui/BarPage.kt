@@ -104,14 +104,3 @@ fun BarPage(
         }
     }
 }
-
-fun recordBarVisit(
-    context: Context,
-    barCount: Int,
-    onUnlocked: (String) -> Unit
-) {
-    Achievements.checkBarVisitAchievements(
-        barCount = barCount,
-        onUnlocked = onUnlocked
-    )
-}
