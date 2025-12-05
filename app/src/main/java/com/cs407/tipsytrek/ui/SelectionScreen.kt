@@ -1,7 +1,15 @@
 package com.cs407.tipsytrek.ui
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,6 +30,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -34,19 +44,22 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.cs407.tipsytrek.Beverage
-import com.cs407.tipsytrek.data.DrinkLocationManager
 import com.cs407.tipsytrek.User
+import com.cs407.tipsytrek.data.DrinkLocationManager
 import kotlin.math.sqrt
 import kotlin.random.Random
 
-
 val SelectionScreenId = "selection"
+
+// Light-ish background to match other screens
+private val SelectionBackground = Color(0xFFFDF9F3)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectionScreen(navController: NavController, bevs: List<Beverage>, user: User) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        containerColor = SelectionBackground,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("BAC: ${user.formattedBac}") },
@@ -61,20 +74,42 @@ fun SelectionScreen(navController: NavController, bevs: List<Beverage>, user: Us
             )
         }
     ) { innerPadding ->
-        Column(Modifier
-            .padding(innerPadding)
-            .verticalScroll(rememberScrollState())
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
         ) {
-            bevs.forEach {
-                SelectionRow(it, navController)
-            }
-            if(bevs.size == 0) {
-                Text(
-                    text = "Go collect beverages!",
-                    color = Color.Gray,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
+            // 🔹 Bubbly background
+            SelectionBubblesBackground()
+
+            if (bevs.isEmpty()) {
+                // Empty state with centered message over bubbles
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(24.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Go collect beverages!",
+                        color = Color.Gray,
+                        textAlign = TextAlign.Center,
+                        fontSize = 20.sp,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            } else {
+                // Scrollable list over bubbles
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    bevs.forEach {
+                        SelectionRow(it, navController)
+                    }
+                }
             }
         }
     }
@@ -98,12 +133,14 @@ fun SelectionRow(beverage: Beverage, navController: NavController) {
             val color = Color(beverage.color)
             ColorSpaces.Srgb
             val darkFactor = .9f
-            drawCircle(Color(
-                (color.red * darkFactor),
-                (color.green * darkFactor),
-                (color.blue * darkFactor)
-            ))
-            val radius = (size.width / 2)*.95f
+            drawCircle(
+                Color(
+                    (color.red * darkFactor),
+                    (color.green * darkFactor),
+                    (color.blue * darkFactor)
+                )
+            )
+            val radius = (size.width / 2) * .95f
             drawCircle(color, radius)
             val random = Random(beverage.color.hashCode())
             val bubbleCount = 3
@@ -156,8 +193,71 @@ fun SelectionRow(beverage: Beverage, navController: NavController) {
     }
 }
 
+// 🔹 Background bubbles like login/user, but scoped to this file
+@Composable
+private fun SelectionBubblesBackground(
+    modifier: Modifier = Modifier,
+    bubbleColor: Color = Color(0x22FFC857),
+    speedMultiplier: Float = 1f
+) {
+    val bubbles = remember {
+        List(40) {
+            SelectionBubbleSpec(
+                x = Random.nextFloat(),
+                initialY = Random.nextFloat(),
+                radius = Random.nextFloat().coerceIn(0.004f, 0.018f),
+                speed = Random.nextFloat().coerceIn(0.12f, 0.35f)
+            )
+        }
+    }
+
+    val infiniteTransition = rememberInfiniteTransition(label = "selectionBubbles")
+    val anim by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 12000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "selectionBubblesProgress"
+    )
+
+    Canvas(
+        modifier = modifier.fillMaxSize()
+    ) {
+        val widthPx = size.width
+        val heightPx = size.height
+
+        bubbles.forEach { bubble ->
+            val radiusPx = bubble.radius * size.minDimension * 2f
+
+            val yProgress =
+                ((bubble.initialY + anim * bubble.speed * speedMultiplier) % 1f)
+            val xPos = bubble.x * widthPx
+            val yPos = heightPx * (1f - yProgress)
+
+            drawCircle(
+                color = bubbleColor,
+                radius = radiusPx,
+                center = Offset(xPos, yPos)
+            )
+        }
+    }
+}
+
+private data class SelectionBubbleSpec(
+    val x: Float,
+    val initialY: Float,
+    val radius: Float,
+    val speed: Float
+)
+
 @Preview
 @Composable
 fun SelectionPreview() {
-    SelectionScreen(rememberNavController(), DrinkLocationManager.possibleBevs, user = User())
+    SelectionScreen(
+        rememberNavController(),
+        DrinkLocationManager.possibleBevs,
+        user = User()
+    )
 }
