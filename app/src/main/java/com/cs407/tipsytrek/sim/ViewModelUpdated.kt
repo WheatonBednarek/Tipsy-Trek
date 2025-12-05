@@ -43,9 +43,8 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 //TODO Beverage Input
-//TODO Gravity to screen angle
 //TODO once particles reach 0, drink has been consumed
-//TODO Tweak simulation to request
+//TODO Tweak simulation to request/as needed
 
 // Data classes for rendering
 data class ParticleData(
@@ -466,11 +465,11 @@ class PhysicsViewModel : ViewModel() {
 
         particles.forEach { particle ->
             val pos = particle.body.position
-            var totalBelow = 0;
+            var totalBelow = 0
             particles.forEach { other ->
                 if (particle != other) {
                     val otherPos = other.body.position
-                    if (otherPos.y > pos.y+0.5) totalBelow++;
+                    if (otherPos.y > pos.y+0.5) totalBelow++
                 }
             }
 
@@ -517,11 +516,11 @@ class PhysicsViewModel : ViewModel() {
 
                 if (distance < 10f && distance > 0.1f) {
                     val force = 500f * (1f - distance / 10f)
-                    body.applyLinearImpulse(
+                    /*body.applyLinearImpulse(
                         Vec2((dx / distance) * force, (dy / distance) * force),
                         body.worldCenter,
                         true
-                    )
+                    )*/
                 }
             }
         }
