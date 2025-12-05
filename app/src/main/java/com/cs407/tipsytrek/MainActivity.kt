@@ -139,19 +139,21 @@ class MainActivity : ComponentActivity() {
                             user = user,
                             onResetCurrent = {
                                 updateUser(user.resetCurrentDrinks())
-
                             },
                             onLogout = {
                                 auth.signOut()
                                 firebaseUser = null
-                                user = User()  // back to placeholder
-
+                                user = User()
                                 navController.navigate(LoginPageId) {
                                     popUpTo(0) { inclusive = true }
                                 }
+                            },
+                            onUserUpdated = { updatedUser ->
+                                updateUser(updatedUser)   // reuse your helper so everything stays in sync
                             }
                         )
                     }
+
 
                     // BAR PAGE
                     composable("bar/{barId}") { backStackEntry ->
