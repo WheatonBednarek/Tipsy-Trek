@@ -88,6 +88,8 @@ fun distanceMeters(a: LatLng, b: LatLng): Double {
     return 2 * R * asin(sqrt(h))
 }
 
+val drinkLocationManager = DrinkLocationManager()
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomePage(navController: NavController, user: User, mapViewModel: MapViewModel = viewModel(), onCollectDrink: (Beverage) -> Unit) {
@@ -133,7 +135,6 @@ fun HomePage(navController: NavController, user: User, mapViewModel: MapViewMode
         }
     }
 
-    val drinkLocationManager by remember { mutableStateOf(DrinkLocationManager()) }
     val drinks by drinkLocationManager.drinksFlow.collectAsState()
     // launch a thread to tick the drink manager every second to have it check for changes
     val coroutineScope = rememberCoroutineScope()
@@ -202,14 +203,14 @@ fun HomePage(navController: NavController, user: User, mapViewModel: MapViewMode
 
                     nearbyBar = if (closestDist < 30) closest else null
                 }
-            drinks.forEach {
-                Marker(
-                    state = MarkerState(position = LatLng(it.lat, it.long)),
-                    icon = createColoredCircle(it.beverage.color.toInt(), 64.dp.value.toInt())
-                )
+                drinks.forEach {
+                    Marker(
+                        state = MarkerState(position = LatLng(it.lat, it.long)),
+                        icon = createColoredCircle(it.beverage.color.toInt(), 64.dp.value.toInt())
+                    )
+                }
             }
         }
-            }
         Box(modifier = Modifier
             .fillMaxSize()
             .padding(innerPadding)
