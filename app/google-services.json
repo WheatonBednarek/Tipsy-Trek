@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "393320052014",
+    "project_id": "tipsytrek",
+    "storage_bucket": "tipsytrek.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:393320052014:android:f1025dc3b676a893d076bf",
+        "android_client_info": {
+          "package_name": "com.cs407.tipsytrek"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyARPmkKecyd4STnpt6BI9kXS4bDVH_sUaw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

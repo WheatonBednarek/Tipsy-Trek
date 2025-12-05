@@ -60,6 +60,7 @@ class MapViewModel : ViewModel() {
                                 currentLocation = latLng,
                                 isLoading = false
                             )
+                            getCurrentLocation()
                         } else {
                             _uiState.value = _uiState.value.copy(
                                 error = "Unable to get location.",

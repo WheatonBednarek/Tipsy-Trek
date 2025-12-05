@@ -1,6 +1,8 @@
 package com.cs407.tipsytrek
 
 data class User(
+    val uid: String? = null,
+    val email: String? = null,
     val displayName: String = "Placeholder Name",
     val username: String = "@placeholder",
     val currentDrinks: List<Beverage> = emptyList(),

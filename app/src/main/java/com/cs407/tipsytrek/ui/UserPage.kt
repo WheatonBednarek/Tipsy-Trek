@@ -9,23 +9,37 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.cs407.tipsytrek.User
+import com.cs407.tipsytrek.data.Achievements
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 val UserPageId = "User"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserPage(
-    navController: NavController,
-    user: User,
-    onResetCurrent: () -> Unit
+fun UserPage(navController: NavController,
+             user: User,
+             onResetCurrent: () -> Unit,
+             onLogout: () -> Unit
 ) {
+    val firebaseUser = FirebaseAuth.getInstance().currentUser
+    val userId = firebaseUser?.uid
+    var barCount by remember { mutableStateOf(0) }
+    var achievements by remember { mutableStateOf<List<String>>(emptyList()) }
+
+    LaunchedEffect(Unit) {
+        barCount = Achievements.localBarVisitCount
+        achievements = Achievements.localUnlockedAchievements.toList()
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -42,12 +56,30 @@ fun UserPage(
         ) {
             Column {
                 Text("Display name: ${user.displayName}")
-                Text("Username: ${user.username}")
+                Text("Email: ${user.email ?: "Unknown"}")
+
+                // Text("Username: ${user.username}")
 
                 Spacer(Modifier.padding(top = 16.dp))
 
                 Text("Current drinks: ${user.currentDrinks.size}")
                 Text("All-time drinks: ${user.allTimeDrinks.size}")
+
+                Spacer(Modifier.padding(top = 16.dp))
+
+                Text("Bars visited: $barCount")
+
+                Spacer(Modifier.padding(top = 16.dp))
+
+                Text("Achievements:", style = MaterialTheme.typography.titleMedium)
+
+                if (achievements.isEmpty()) {
+                    Text("No achievements yet.")
+                } else {
+                    achievements.forEach {
+                        Text("$it")
+                    }
+                }
             }
 
             Column {
@@ -56,6 +88,15 @@ fun UserPage(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Reset drink count")
+                }
+
+                Spacer(Modifier.padding(top = 8.dp))
+
+                Button(
+                    onClick = onLogout,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Log out")
                 }
 
                 Spacer(Modifier.padding(top = 8.dp))
