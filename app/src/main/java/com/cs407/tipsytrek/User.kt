@@ -1,14 +1,21 @@
+// User.kt
 package com.cs407.tipsytrek
 
+import com.google.firebase.firestore.IgnoreExtraProperties
+
+@IgnoreExtraProperties
 data class User(
     val uid: String? = null,
     val email: String? = null,
     val displayName: String = "Placeholder Name",
     val username: String = "@placeholder",
     val currentDrinks: List<Beverage> = emptyList(),
-    val allTimeDrinks: List<Beverage> = emptyList()
+    val allTimeDrinks: List<Beverage> = emptyList(),
+
+    // 🔹 NEW: progress for achievements, persisted per user
+    val barVisitCount: Int = 0
 ) {
-    // Simple BAC model: 0.02% per standard drink
+    // Simple BAC model: 0.02% per standard drink in current session
     val bac: Double
         get() = currentDrinks.sumOf { it.standardDrinks } * 0.02
 
@@ -23,4 +30,8 @@ data class User(
 
     fun resetCurrentDrinks(): User =
         copy(currentDrinks = emptyList())
+
+    // 🔹 Helper to increment bar visit count
+    fun incrementBarVisit(): User =
+        copy(barVisitCount = barVisitCount + 1)
 }

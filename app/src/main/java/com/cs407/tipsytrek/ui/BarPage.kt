@@ -17,16 +17,21 @@ import com.cs407.tipsytrek.data.Achievements
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.cs407.tipsytrek.User
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BarPage(
     navController: NavController,
-    barName: String?
+    barId: String,
+    user: User,
+    onUserUpdated: (User) -> Unit
 ) {
-    val bar = MadisonBars.firstOrNull { it.name == barName }
+    val bar = MadisonBars.firstOrNull { it.name == barId }
     val context = LocalContext.current
     var barVisitCount by remember { mutableStateOf(0) }
+
     var unlockedAchievement by remember { mutableStateOf<String?>(null) }
 
     if (bar == null) {
@@ -34,11 +39,28 @@ fun BarPage(
         return
     }
 
-    LaunchedEffect(barName) {
-        Achievements.recordBarVisit { achievement ->
-            unlockedAchievement = achievement
-        }
+    LaunchedEffect(barId) {
+        // Achievements BEFORE this visit
+        val beforeUnlocked = Achievements.unlockedAchievementNames(
+            barCount = user.barVisitCount,
+            drinkCount = user.allTimeDrinks.size
+        )
+
+        // Increment bar visits in the User object
+        val updatedUser = user.incrementBarVisit()
+        onUserUpdated(updatedUser)   // this will call updateUser(...) in MainActivity
+
+        // Achievements AFTER this visit
+        val afterUnlocked = Achievements.unlockedAchievementNames(
+            barCount = updatedUser.barVisitCount,
+            drinkCount = updatedUser.allTimeDrinks.size
+        )
+
+        // Find any newly unlocked achievement
+        val newlyUnlocked = afterUnlocked.toSet() - beforeUnlocked.toSet()
+        unlockedAchievement = newlyUnlocked.firstOrNull()
     }
+
 
     unlockedAchievement?.let { name ->
         AlertDialog(

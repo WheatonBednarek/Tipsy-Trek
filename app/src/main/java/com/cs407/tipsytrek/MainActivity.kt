@@ -1,6 +1,7 @@
 package com.cs407.tipsytrek
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -30,20 +31,42 @@ import com.google.firebase.auth.FirebaseUser
 import com.cs407.tipsytrek.ui.LoginPage
 import com.cs407.tipsytrek.ui.LoginPageId
 import com.cs407.tipsytrek.ui.BarPage
+import androidx.navigation.compose.rememberNavController
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.app
+import com.google.firebase.ktx.app
 
 
 // 🔹 IMPORTANT: import Beverage
 
 class MainActivity : ComponentActivity() {
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+
+        // 🔍 Log the Firebase project ID at runtime
+        Log.d("FIREBASE", "Runtime projectId = ${Firebase.app.options.projectId}")
+
+        val testDb = Firebase.firestore
+        testDb.collection("debug")
+            .document("testWrite")
+            .set(mapOf("timestamp" to System.currentTimeMillis()))
+            .addOnSuccessListener {
+                Log.d("FIRESTORE", "Debug write SUCCESS")
+            }
+            .addOnFailureListener { e ->
+                Log.e("FIRESTORE", "Debug write FAILED: ${e.localizedMessage}", e)
+            }
         setContent {
             val navController = rememberNavController()
 
             val auth = remember { FirebaseAuth.getInstance() }
             var firebaseUser by remember { mutableStateOf(auth.currentUser) }
+            val db = remember { Firebase.firestore }
 
             // original list used for SelectionScreen
             var beverageCollection by remember { mutableStateOf(listOf<Beverage>()) }
@@ -67,16 +90,29 @@ class MainActivity : ComponentActivity() {
 
             val startDestination = LoginPageId
 
-            // Helper: whenever we change the current User, also save it in usersByUid
+            // Helper: whenever we change the current User, also save it in Firestore
             fun updateUser(newUser: User) {
                 user = newUser
                 val uid = firebaseUser?.uid
                 if (uid != null) {
-                    usersByUid = usersByUid.toMutableMap().apply {
-                        put(uid, newUser)
-                    }
+
+                    Log.d("FIRESTORE", "Attempting to write user $uid with drinks=${newUser.allTimeDrinks.size}")
+
+                    db.collection("users")
+                        .document(uid)
+                        .set(newUser)
+                        .addOnSuccessListener {
+                            Log.d("FIRESTORE", "SUCCESS writing user $uid")
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("FIRESTORE", "FAILED writing user $uid: ${e.localizedMessage}", e)
+                        }
                 }
             }
+
+
+
+
 
 
             TipsyTrekTheme {
@@ -85,24 +121,45 @@ class MainActivity : ComponentActivity() {
                     composable(LoginPageId) {
                         LoginPage { signedInUser ->
                             firebaseUser = signedInUser
-
                             val uid = signedInUser.uid
-                            val existingUser = usersByUid[uid]
 
-                            // If we've seen this uid before in this app run, reuse their User
-                            val newUser = existingUser ?: firebaseUserToUser(signedInUser)
-                            user = newUser
+                            db.collection("users")
+                                .document(uid)
+                                .get()
+                                .addOnSuccessListener { snapshot ->
+                                    val storedUser = snapshot.toObject(User::class.java)
 
-                            // Make sure map is updated
-                            usersByUid = usersByUid.toMutableMap().apply {
-                                put(uid, newUser)
-                            }
+                                    val newUser = if (storedUser != null) {
+                                        // 🔹 Use the stored user (with allTimeDrinks, etc.)
+                                        storedUser
+                                    } else {
+                                        // 🔹 First login for this UID: create and save a new User
+                                        val created = firebaseUserToUser(signedInUser)
+                                        db.collection("users")
+                                            .document(uid)
+                                            .set(created)
+                                        created
+                                    }
 
-                            navController.navigate(HomePageId) {
-                                popUpTo(LoginPageId) { inclusive = true }
-                            }
+                                    updateUser(newUser)   // updates state + Firestore cache
+
+                                    navController.navigate(HomePageId) {
+                                        popUpTo(LoginPageId) { inclusive = true }
+                                    }
+                                }
+                                .addOnFailureListener {
+                                    // Fallback if Firestore read fails: at least use a fresh User
+                                    val fallback = firebaseUserToUser(signedInUser)
+                                    updateUser(fallback)
+
+                                    navController.navigate(HomePageId) {
+                                        popUpTo(LoginPageId) { inclusive = true }
+                                    }
+                                }
                         }
                     }
+
+
 
 
                     // HOME
@@ -143,7 +200,7 @@ class MainActivity : ComponentActivity() {
                             onLogout = {
                                 auth.signOut()
                                 firebaseUser = null
-                                user = User()
+
                                 navController.navigate(LoginPageId) {
                                     popUpTo(0) { inclusive = true }
                                 }
@@ -158,8 +215,14 @@ class MainActivity : ComponentActivity() {
                     // BAR PAGE
                     composable("bar/{barId}") { backStackEntry ->
                         val barId = backStackEntry.arguments?.getString("barId")!!
-                        BarPage(navController, barId)
+                        BarPage(
+                            navController = navController,
+                            barId = barId,
+                            user = user,
+                            onUserUpdated = { updated -> updateUser(updated) }
+                        )
                     }
+
 
                     // DRINK DETAIL
                     composable<Beverage> { backStack ->

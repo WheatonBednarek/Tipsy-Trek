@@ -51,6 +51,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
 import kotlin.random.Random
 
+
 val UserPageId = "User"
 
 // Light theme palette
@@ -91,9 +92,15 @@ fun UserPage(
 
     var errorText by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(Unit) {
-        barCount = Achievements.localBarVisitCount
-        achievements = Achievements.localUnlockedAchievements.toList()
+    LaunchedEffect(user) {
+        // 🔹 Pull progress from User stored in Firestore
+        barCount = user.barVisitCount
+        val drinkCount = user.allTimeDrinks.size
+
+        achievements = Achievements.unlockedAchievementNames(
+            barCount = barCount,
+            drinkCount = drinkCount
+        )
     }
 
     fun showToast(msg: String) {

@@ -1,93 +1,84 @@
+// Achievements.kt
 package com.cs407.tipsytrek.data
 
-import android.content.Context
-import android.util.Log
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+// No Android, no Firebase imports needed now
 
 object Achievements {
 
-    var localBarVisitCount = 0
-    val localUnlockedAchievements = mutableSetOf<String>()
+    data class Achievement(
+        val id: String,
+        val name: String,
+        val description: String,
+        val threshold: Int
+    )
 
-
-    fun recordBarVisit(onUnlocked: (String) -> Unit) {
-        localBarVisitCount += 1
-
-        checkBarVisitAchievements(localBarVisitCount, onUnlocked)
-    }
-
-    fun checkBarVisitAchievements(
-        barCount: Int,
-        onUnlocked: (String) -> Unit
-    ) {
-        val achievements = listOf(
-            1 to "First Bar!",
-            3 to "Bar Hopper",
-            5 to "Neighborhood Legend",
-            10 to "Madison Nightlife Master"
+    // 🔹 Bar-visit based achievements
+    private val barVisitAchievements = listOf(
+        Achievement(
+            id = "bar_1",
+            name = "First Bar!",
+            description = "Visit your first bar.",
+            threshold = 1
+        ),
+        Achievement(
+            id = "bar_3",
+            name = "Bar Hopper",
+            description = "Visit 3 different bars.",
+            threshold = 3
+        ),
+        Achievement(
+            id = "bar_5",
+            name = "Neighborhood Legend",
+            description = "Visit 5 different bars.",
+            threshold = 5
+        ),
+        Achievement(
+            id = "bar_10",
+            name = "Madison Nightlife Master",
+            description = "Visit 10 bars.",
+            threshold = 10
         )
+    )
 
-        achievements.forEach { (threshold, name) ->
-            if (barCount >= threshold && name !in localUnlockedAchievements) {
-                localUnlockedAchievements.add(name)
-                onUnlocked(name)
-            }
-        }
-    }
-
-    fun checkDrinkAchievements(context: Context,
-                               drinkCount: Int,
-                               onUnlocked: (String) -> Unit) {
-        val achievements = listOf(
-            2 to "Getting Started",
-            5 to "Feeling Buzzed",
-            10 to "Party Professional",
-            20 to "Tipsy Trek Champion"
+    // 🔹 Drink-count based achievements
+    private val drinkAchievements = listOf(
+        Achievement(
+            id = "drink_2",
+            name = "Getting Started",
+            description = "Consumed 2 drinks.",
+            threshold = 2
+        ),
+        Achievement(
+            id = "drink_5",
+            name = "Feeling Buzzed",
+            description = "Consumed 5 drinks.",
+            threshold = 5
+        ),
+        Achievement(
+            id = "drink_10",
+            name = "Party Professional",
+            description = "Consumed 10 drinks.",
+            threshold = 10
+        ),
+        Achievement(
+            id = "drink_20",
+            name = "Tipsy Trek Champion",
+            description = "Consumed 20 drinks.",
+            threshold = 20
         )
+    )
 
-        achievements.forEach { (threshold, name) ->
-            if (drinkCount >= threshold) {
-                unlock("", name, "Consumed $threshold drinks.", onUnlocked, context)
-            }
-        }
-    }
+    // 🔹 Which bar achievements are unlocked for given barCount
+    fun unlockedBarAchievements(barCount: Int): List<Achievement> =
+        barVisitAchievements.filter { barCount >= it.threshold }
 
-    fun unlock(
-        userId: String,
-        name: String,
-        description: String,
-        onUnlocked: (String) -> Unit,
-        context: Context
-    ) {
-        val newlyUnlocked = LocalAchievements.unlock(context, name)
+    // 🔹 Which drink achievements are unlocked for given drinkCount
+    fun unlockedDrinkAchievements(drinkCount: Int): List<Achievement> =
+        drinkAchievements.filter { drinkCount >= it.threshold }
 
-        if (newlyUnlocked) {
-            onUnlocked(name)
-        }
-    }
-}
-
-object LocalAchievements {
-
-    private const val PREFS = "achievements"
-
-    fun getUnlocked(context: Context): Set<String> {
-        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        return prefs.getStringSet("unlocked", emptySet()) ?: emptySet()
-    }
-
-    fun unlock(context: Context, name: String): Boolean {
-        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        val current = prefs.getStringSet("unlocked", emptySet())?.toMutableSet() ?: mutableSetOf()
-
-        return if (!current.contains(name)) {
-            current.add(name)
-            prefs.edit().putStringSet("unlocked", current).apply()
-            Log.d("Achievements", "Unlocked locally: $name")
-            true
-        } else {
-            false
-        }
-    }
+    // 🔹 Convenience: just the names, for the profile UI
+    fun unlockedAchievementNames(barCount: Int, drinkCount: Int): List<String> =
+        (unlockedBarAchievements(barCount) + unlockedDrinkAchievements(drinkCount))
+            .map { it.name }
+            .distinct()
 }
