@@ -184,7 +184,7 @@ class PhysicsViewModel(
             createBeerGlass(world = w, x = 0f, y = 10f)
 
             // Pour liquid from above
-            createColoredLiquid(w, 0f, 12f, 4.06f, 9.8f, beverageColor)
+            createColoredLiquid(w, 0f, 12f, 4.06f, 8.68f, beverageColor)
         }
     }
 
