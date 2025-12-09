@@ -31,9 +31,9 @@ fun DrinkPage(
     onDrinkConsumed: (Beverage) -> Unit
 ) {
     // Called once when this composable first appears
-    LaunchedEffect(Unit) {
-        onDrinkConsumed(beverage)
-    }
+    //LaunchedEffect(Unit) {
+    //    onDrinkConsumed(beverage)
+    //}
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -56,6 +56,7 @@ fun DrinkPage(
             .padding(innerPadding)) {
             MaterialTheme {
                 PhysicsSimulationScreen(
+                    beverage = beverage,
                     onDrink = { onDrinkConsumed(beverage) }
                 )
             }

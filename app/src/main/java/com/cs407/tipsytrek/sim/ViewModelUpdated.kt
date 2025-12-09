@@ -7,6 +7,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -24,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,6 +33,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlin.math.min
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.cs407.tipsytrek.Beverage
 import org.jbox2d.dynamics.World
 import org.jbox2d.dynamics.*
 import org.jbox2d.collision.shapes.EdgeShape
@@ -80,7 +83,11 @@ data class CustomParticle(
 )
 
 // ViewModel to manage simulation
-class PhysicsViewModel : ViewModel() {
+class PhysicsViewModel(
+    private val beverageType: Int = 1,
+    private val beverageColor: Color = Color(0xFFFFB84D),
+    private val cbF: () -> Unit
+) : ViewModel() {
     private val _state = MutableStateFlow(SimulationState())
     val state: StateFlow<SimulationState> = _state.asStateFlow()
 
@@ -94,7 +101,9 @@ class PhysicsViewModel : ViewModel() {
     private var lastFrameTime = System.currentTimeMillis()
     private var frameCount = 0
     private var fpsCounter = 0
-
+    private var drinkComplete = false
+    private var hasPoured = false
+    private var hasDrank = false
     fun initSimulation(type: SimulationType) {
         cleanup()
 
@@ -109,6 +118,7 @@ class PhysicsViewModel : ViewModel() {
             SimulationType.DRINK_TEMP -> setupDrink()
         }
 
+        if(!drinkComplete) hasPoured = true
         startSimulation()
     }
 
@@ -174,7 +184,7 @@ class PhysicsViewModel : ViewModel() {
             createBeerGlass(world = w, x = 0f, y = 10f)
 
             // Pour liquid from above
-            createColoredLiquid(w, 0f, 15f, 3f, 12f, Color(0xFFFFB84D))
+            createColoredLiquid(w, 0f, 15f, 3f, 12f, beverageColor)
         }
     }
 
@@ -259,7 +269,7 @@ class PhysicsViewModel : ViewModel() {
     }
 
     private fun createColoredLiquid(w: World, x: Float, y: Float, width: Float, height: Float, color: Color) {
-        val particleRadius = 0.10f
+        val particleRadius = 0.20f
         val rows = (height / (particleRadius * 2f)).toInt()
         val cols = (width / (particleRadius * 2f)).toInt()
 
@@ -394,21 +404,27 @@ class PhysicsViewModel : ViewModel() {
         world?.let { w ->
             // Step physics
             w.step(targetDt, 8, 3)
-
             // Delete off-screen particles
             deleteOffScreenParticles()
+            hasDrank = particles.isEmpty()
+            if(hasDrank && hasPoured && !drinkComplete)  {
+                drinkComplete = true
+                cbF()
+            }
 
             // Update support levels every 5 frames
-            if (frameCount % 5 == 0) {
+
+            if (beverageType == 1 && frameCount % 5 == 0) {
                 updateParticleSupportLevels()
             }
 
             // Extract particle data
             val particleDataList = particles.map { particle ->
                 val pos = particle.body.position
-                val color = when (particle.supportLevel) {
-                    0 -> Color(0xFFFFFFFF)      // White - no support
-                    else -> Color(0xFFFFAA00)   // Orange - has support
+                val color = when {
+                    beverageType != 1 -> beverageColor
+                    particle.supportLevel != 0 -> beverageColor
+                    else -> Color(0xFFFFFFFF)
                 }
                 ParticleData(pos.x, pos.y, color)
             }
@@ -665,13 +681,32 @@ private fun DrawScope.drawGrid(
     }
 }
 
+class PhysicsViewModelFactory(
+    private val beverage: Beverage,
+    private val onDrink: () -> Unit
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(PhysicsViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return PhysicsViewModel(
+                beverageType = beverage.drinkType,
+                beverageColor = Color(beverage.color),
+                cbF = onDrink
+            ) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PhysicsSimulationScreen(
-    viewModel: PhysicsViewModel = viewModel(),
-    color: Color = Color(0xFFFFB84D),
+    beverage: Beverage,
     onDrink: () -> Unit,
 ) {
+    val viewModel: PhysicsViewModel = viewModel(
+        factory = PhysicsViewModelFactory(beverage, onDrink)
+    )
     val state by viewModel.state.collectAsState()
 
     val context = LocalContext.current
@@ -724,7 +759,9 @@ fun PhysicsSimulationScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Button(
-                            onClick = { viewModel.initSimulation(SimulationType.DRINK_TEMP) },
+                            onClick = {
+                                viewModel.initSimulation(SimulationType.DRINK_TEMP)
+                                      },
                             modifier = Modifier.fillMaxWidth(0.33f)
                         ) {
                             Text("Pour", fontSize = 12.sp)
