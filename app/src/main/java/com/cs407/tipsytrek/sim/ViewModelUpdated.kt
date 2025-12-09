@@ -45,9 +45,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-//TODO Beverage Input
-//TODO once particles reach 0, drink has been consumed
-//TODO Tweak simulation to request/as needed
+//Tweak simulation to request/as needed
 
 // Data classes for rendering
 data class ParticleData(
@@ -118,15 +116,17 @@ class PhysicsViewModel(
             SimulationType.DRINK_TEMP -> setupDrink()
         }
 
-        if(!drinkComplete) hasPoured = true
-        startSimulation()
+        if(!drinkComplete && !hasPoured) {
+            hasPoured = true
+            startSimulation()
+        }
     }
 
     private fun deleteOffScreenParticles() {
         world?.let { w ->
             particles.removeAll { particle ->
                 val pos = particle.body.position
-                val shouldDelete = pos.x < -25f || pos.x > 25f || pos.y < -25f || pos.y > 40f
+                val shouldDelete = pos.x < -12f || pos.x > 12f || pos.y < -12f || pos.y > 20f
                 if (shouldDelete) {
                     w.destroyBody(particle.body)
                 }
@@ -184,7 +184,7 @@ class PhysicsViewModel(
             createBeerGlass(world = w, x = 0f, y = 10f)
 
             // Pour liquid from above
-            createColoredLiquid(w, 0f, 15f, 3f, 12f, beverageColor)
+            createColoredLiquid(w, 0f, 12f, 4.06f, 9.8f, beverageColor)
         }
     }
 
@@ -269,7 +269,7 @@ class PhysicsViewModel(
     }
 
     private fun createColoredLiquid(w: World, x: Float, y: Float, width: Float, height: Float, color: Color) {
-        val particleRadius = 0.20f
+        val particleRadius = 0.14f
         val rows = (height / (particleRadius * 2f)).toInt()
         val cols = (width / (particleRadius * 2f)).toInt()
 
@@ -295,9 +295,9 @@ class PhysicsViewModel(
 
         val fixtureDef = FixtureDef().apply {
             this.shape = shape
-            density = 1.0f
-            friction = 0.1f
-            restitution = 0.1f
+            density = 0.8f
+            friction = 0.05f
+            restitution = 0.05f
         }
 
         body.createFixture(fixtureDef)
@@ -576,7 +576,7 @@ fun PhysicsSimulationCanvas(
     Canvas(
         modifier = modifier
             .requiredSize(3000.dp)
-            .background(Color(0x00000000))
+            .background(Color(0xFFF0F0FF))
             .pointerInput(Unit) {
                 detectTapGestures { offset ->
                     onTap(offset)
