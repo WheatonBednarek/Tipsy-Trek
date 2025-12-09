@@ -111,8 +111,6 @@ class PhysicsViewModel(
         when (type) {
             SimulationType.WATER_DROP -> setupWaterDropSimulation()
             SimulationType.PARTICLE_FOUNTAIN -> setupParticleFountain()
-            SimulationType.MIXED_LIQUIDS -> setupMixedLiquids()
-            SimulationType.DAM_BREAK -> setupDamBreak()
             SimulationType.DRINK_TEMP -> setupDrink()
         }
 
@@ -151,30 +149,6 @@ class PhysicsViewModel(
         world?.let { w ->
             createBoundaries(w)
             createParticleFountain(w, 0f, -8f, 150)
-        }
-    }
-
-    private fun setupMixedLiquids() {
-        world?.let { w ->
-            createBoundaries(w)
-
-            // Left: Yellow liquid
-            createColoredLiquid(w, -12f, 10f, 6f, 8f, Color.Yellow)
-
-            // Right: Black liquid
-            createColoredLiquid(w, 12f, 10f, 6f, 8f, Color.Black)
-        }
-    }
-
-    private fun setupDamBreak() {
-        world?.let { w ->
-            createBoundaries(w)
-
-            // Water on left side
-            createColoredLiquid(w, -15f, 5f, 8f, 15f, Color.Cyan)
-
-            // Dam in middle
-            createDam(w, 0f, 0f, 12f)
         }
     }
 
@@ -561,8 +535,6 @@ class PhysicsViewModel(
 enum class SimulationType {
     WATER_DROP,
     PARTICLE_FOUNTAIN,
-    MIXED_LIQUIDS,
-    DAM_BREAK,
     DRINK_TEMP
 }
 
