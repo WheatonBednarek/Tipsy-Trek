@@ -761,12 +761,12 @@ fun PhysicsSimulationScreen(
                 }
             )
 
-            SimulationStats(
+            /*SimulationStats(
                 state = state,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(16.dp)
-            )
+            )*/
         }
     }
 }
